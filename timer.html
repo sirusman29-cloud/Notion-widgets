@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Missile Timer (9 × 5)</title>
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#1a0b2e;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --accent:#7c3aed;
+      --accent2:#22d3ee;
+      --danger:#fb7185;
+      --ok:#34d399;
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+      --radius: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(124,58,237,0.35), transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, rgba(34,211,238,0.25), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-family:var(--sans);
+    }
+
+    .wrap{
+      width:min(860px, 92vw);
+      padding:18px;
+    }
+
+    .card{
+      position:relative;
+      overflow:hidden;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.03));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.10);
+      padding: 22px;
+    }
+
+    .glow{
+      position:absolute;
+      inset:-120px;
+      background:
+        radial-gradient(closest-side, rgba(124,58,237,0.22), transparent 65%),
+        radial-gradient(closest-side, rgba(34,211,238,0.18), transparent 65%);
+      filter: blur(18px);
+      pointer-events:none;
+    }
+
+    .top{
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width: 240px;
+    }
+
+    .title h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:0.3px;
+      color: var(--text);
+      font-weight: 650;
+    }
+    .title .sub{
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .timer{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+      min-width: 260px;
+    }
+
+    .big{
+      font-family: var(--mono);
+      font-size: clamp(44px, 6vw, 64px);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      font-size: 12px;
+      user-select:none;
+    }
+
+    .dotline{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top: 8px;
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 0 0 rgba(124,58,237,0);
+      transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+    .dot.active{
+      background: rgba(34,211,238,0.55);
+      border-color: rgba(34,211,238,0.55);
+      transform: scale(1.1);
+      box-shadow: 0 0 18px rgba(34,211,238,0.25);
+    }
+    .dot.done{
+      background: rgba(124,58,237,0.75);
+      border-color: rgba(124,58,237,0.65);
+      box-shadow: 0 0 18px rgba(124,58,237,0.25);
+    }
+
+    .barwrap{
+      margin-top: 18px;
+      position:relative;
+      z-index:1;
+    }
+    .bar{
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      overflow:hidden;
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(34,211,238,0.85), rgba(124,58,237,0.85));
+      border-radius: 999px;
+      transition: width 200ms linear;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      margin-top: 16px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+    }
+
+    button{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing:0.2px;
+      transition: transform 120ms ease, background 120ms ease, border 120ms ease;
+    }
+    button:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.09); }
+    button:active{ transform: translateY(0px) scale(0.99); }
+
+    .primary{
+      background: linear-gradient(90deg, rgba(34,211,238,0.25), rgba(124,58,237,0.25));
+      border-color: rgba(34,211,238,0.22);
+    }
+    .danger{
+      border-color: rgba(251,113,133,0.35);
+    }
+
+    .settings{
+      margin-top: 14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      position:relative;
+      z-index:1;
+    }
+
+    .field{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input{
+      width: 70px;
+      padding:6px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.20);
+      color: var(--text);
+      font-family: var(--mono);
+      outline:none;
+    }
+
+    .status{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      position:relative;
+      z-index:1;
+    }
+
+    .hint{
+      color: rgba(255,255,255,0.55);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      margin-left: 8px;
+    }
+
+    .ok{ color: var(--ok); }
+    .warn{ color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="glow"></div>
+
+      <div class="top">
+        <div class="title">
+          <h1>Missile Timer <span class="badge">9 × 5</span></h1>
+          <div class="sub">Auto 5-minute chunks. Beep. Next chunk. Repeat. Then victory 🟣🟦</div>
+        </div>
+
+        <div class="timer">
+          <div class="big" id="time">05:00</div>
+          <div class="row">
+            <div class="pill" id="chunkPill">Chunk: 1 / 9</div>
+            <div class="pill" id="modePill">Status: Ready</div>
+          </div>
+          <div class="dotline" id="dots"></div>
+        </div>
+      </div>
+
+      <div class="barwrap">
+        <div class="bar"><div class="fill" id="fill"></div></div>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="startBtn">Start</button>
+        <button id="pauseBtn">Pause</button>
+        <button class="danger" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="settings">
+        <div class="field">
+          Chunk (minutes)
+          <input id="chunkMin" type="number" min="1" max="120" value="5"/>
+        </div>
+        <div class="field">
+          Total chunks
+          <input id="totalChunks" type="number" min="1" max="99" value="9"/>
+        </div>
+        <div class="field">
+          Beep volume
+          <input id="vol" type="number" min="1" max="100" value="35"/>
+        </div>
+      </div>
+
+      <div class="status" id="status">
+        Tip: If this is embedded in Notion, you may need to click <b>Start</b> once to unlock sound (browser rules).
+        <span class="hint">No phone timer juggling allowed.</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- State ----------
+    let total = 9;
+    let chunkSeconds = 5 * 60;
+    let currentChunk = 1;
+    let remaining = chunkSeconds;
+    let running = false;
+    let tickId = null;
+    let startedAt = null; // timestamp for smoother timing
+    let volume = 0.35;
+
+    // ---------- Elements ----------
+    const timeEl = document.getElementById("time");
+    const chunkPill = document.getElementById("chunkPill");
+    const modePill = document.getElementById("modePill");
+    const dotsEl = document.getElementById("dots");
+    const fillEl = document.getElementById("fill");
+    const statusEl = document.getElementById("status");
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const chunkMinInput = document.getElementById("chunkMin");
+    const totalChunksInput = document.getElementById("totalChunks");
+    const volInput = document.getElementById("vol");
+
+    // ---------- Sound (Web Audio) ----------
+    let audioCtx = null;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function beep(freq = 880, ms = 180) {
+      ensureAudio();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      g.gain.value = volume;
+
+      o.type = "sine";
+      o.frequency.value = freq;
+
+      o.connect(g);
+      g.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+      g.gain.setValueAtTime(volume, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + ms / 1000);
+
+      o.start(now);
+      o.stop(now + ms / 1000);
+    }
+
+    function tripleBeep() {
+      beep(880, 160);
+      setTimeout(() => beep(988, 160), 210);
+      setTimeout(() => beep(1175, 240), 420);
+    }
+
+    // ---------- UI Helpers ----------
+    function fmt(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+
+    function setMode(text, cls) {
+      modePill.textContent = `Status: ${text}`;
+      modePill.classList.remove("ok","warn");
+      if (cls) modePill.classList.add(cls);
+    }
+
+    function buildDots() {
+      dotsEl.innerHTML = "";
+      for (let i = 1; i <= total; i++) {
+        const d = document.createElement("div");
+        d.className = "dot";
+        d.title = `Chunk ${i}`;
+        dotsEl.appendChild(d);
+      }
+    }
+
+    function updateDots() {
+      const dots = [...dotsEl.children];
+      dots.forEach((d, i) => {
+        const idx = i + 1;
+        d.classList.remove("active","done");
+        if (idx < currentChunk) d.classList.add("done");
+        else if (idx === currentChunk) d.classList.add("active");
+      });
+    }
+
+    function updateUI() {
+      timeEl.textContent = fmt(remaining);
+      chunkPill.textContent = `Chunk: ${currentChunk} / ${total}`;
+
+      // progress within chunk
+      const progress = 1 - (remaining / chunkSeconds);
+      fillEl.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
+
+      updateDots();
+    }
+
+    // ---------- Timer Engine ----------
+    function stopTick() {
+      if (tickId) cancelAnimationFrame(tickId);
+      tickId = null;
+      startedAt = null;
+    }
+
+    function tick() {
+      if (!running) return;
+
+      const now = performance.now();
+      if (!startedAt) startedAt = now;
+
+      const elapsed = (now - startedAt) / 1000;
+      const newRemaining = Math.max(0, chunkSeconds - elapsed);
+
+      remaining = newRemaining;
+
+      if (remaining <= 0) {
+        // chunk finished
+        beep(740, 220);
+
+        if (currentChunk < total) {
+          currentChunk += 1;
+          startedAt = performance.now();
+          remaining = chunkSeconds;
+          setMode("Running", "ok");
+          updateUI();
+        } else {
+          // session finished
+          running = false;
+          stopTick();
+          setMode("Finished", "ok");
+          remaining = 0;
+          updateUI();
+          tripleBeep();
+          statusEl.innerHTML = `Session complete ✅ 9 chunks done. <span class="hint">You just saved 8 manual timer resets.</span>`;
+          return;
+        }
+      }
+
+      updateUI();
+      tickId = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      // lock in current settings only if not running
+      if (!running) {
+        ensureAudio(); // unlock sound on user click
+        setMode("Running", "ok");
+        running = true;
+        // align remaining with startedAt logic
+        startedAt = performance.now() - (chunkSeconds - remaining) * 1000;
+        tickId = requestAnimationFrame(tick);
+      }
+    }
+
+    function pause() {
+      if (running) {
+        running = false;
+        stopTick();
+        setMode("Paused", "warn");
+      }
+    }
+
+    function reset() {
+      running = false;
+      stopTick();
+      currentChunk = 1;
+      remaining = chunkSeconds;
+      setMode("Ready");
+      statusEl.innerHTML = `Tip: If embedded in Notion, click <b>Start</b> once to unlock sound (browser rules). <span class="hint">No phone timer juggling allowed.</span>`;
+      updateUI();
+    }
+
+    // ---------- Settings ----------
+    function applySettings() {
+      const cm = Number(chunkMinInput.value || 5);
+      const tc = Number(totalChunksInput.value || 9);
+      const v = Number(volInput.value || 35);
+
+      chunkSeconds = Math.max(1, cm) * 60;
+      total = Math.max(1, tc);
+      volume = Math.max(0.01, Math.min(1, v / 100));
+
+      // rebuild dots
+      buildDots();
+
+      // if not running, reset remaining to new chunk length
+      if (!running) {
+        remaining = chunkSeconds;
+        currentChunk = Math.min(currentChunk, total);
+        updateUI();
+      } else {
+        // keep current chunk, but adjust remaining proportionally
+        const progress = 1 - (remaining / (chunkSeconds)); // old might not be correct if changed mid-run
+        // simplest: keep remaining as-is but clamp
+        remaining = Math.min(remaining, chunkSeconds);
+        currentChunk = Math.min(currentChunk, total);
+      }
+    }
+
+    // ---------- Events ----------
+    startBtn.addEventListener("click", start);
+    pauseBtn.addEventListener("click", pause);
+    resetBtn.addEventListener("click", reset);
+
+    [chunkMinInput, totalChunksInput, volInput].forEach(inp => {
+      inp.addEventListener("change", () => {
+        if (running) {
+          statusEl.innerHTML = `<span class="warn">Paused recommended</span> before changing settings mid-run.`;
+        }
+        applySettings();
+      });
+    });
+
+    // ---------- Init ----------
+    applySettings();
+    setMode("Ready");
+    updateUI();
+  </script>
+</body>
+</html>
