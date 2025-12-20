@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Space Orbit Clock</title>
+  <style>
+    :root{
+      --bg1:#070814;
+      --bg2:#071b2e;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --accent:#7c3aed;
+      --accent2:#22d3ee;
+      --ring: rgba(255,255,255,0.18);
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+      --radius: 22px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(1200px 700px at 20% 25%, rgba(124,58,237,0.35), transparent 55%),
+        radial-gradient(1000px 600px at 80% 35%, rgba(34,211,238,0.25), transparent 55%),
+        radial-gradient(700px 500px at 55% 80%, rgba(99,102,241,0.16), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-family:var(--sans);
+      overflow:hidden;
+    }
+
+    /* tiny starfield */
+    .stars::before, .stars::after{
+      content:"";
+      position:fixed;
+      inset:-200px;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.55) 40%, transparent 45%),
+        radial-gradient(1px 1px at 55% 70%, rgba(255,255,255,.35) 40%, transparent 45%),
+        radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,.35) 40%, transparent 45%),
+        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.25) 40%, transparent 45%),
+        radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,.25) 40%, transparent 45%);
+      opacity:.55;
+      filter: blur(.2px);
+      transform: translateZ(0);
+      pointer-events:none;
+    }
+    .stars::after{
+      opacity:.35;
+      filter: blur(.6px);
+      animation: drift 18s linear infinite;
+    }
+    @keyframes drift{
+      from{ transform: translate(-10px,-10px) }
+      to  { transform: translate(10px,10px) }
+    }
+
+    .card{
+      width:min(860px, 92vw);
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(14px);
+      padding: 26px 26px 22px;
+      position:relative;
+    }
+
+    .header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+    }
+    .title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .title h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(255,255,255,.8);
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .right{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+      min-width: 260px;
+    }
+
+    .bigtime{
+      font-family: var(--mono);
+      font-size: 54px;
+      letter-spacing: 1px;
+      line-height: 1;
+      text-shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+    .date{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.22) inset;
+      font-weight:600;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.primary{
+      border-color: rgba(124,58,237,.45);
+      box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+      align-items:center;
+    }
+
+    /* ORBIT SYSTEM */
+    .orbitWrap{
+      display:grid;
+      place-items:center;
+      padding: 8px 0;
+    }
+    .system{
+      width: min(430px, 88vw);
+      aspect-ratio: 1/1;
+      position:relative;
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.08), transparent 60%);
+    }
+    .ring{
+      position:absolute;
+      inset: 10%;
+      border-radius:999px;
+      border:1px solid var(--ring);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+    .ring.r2{ inset: 22%; opacity:.9 }
+    .ring.r3{ inset: 34%; opacity:.8 }
+
+    .sun{
+      position:absolute;
+      inset: 40%;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(124,58,237,.45), rgba(34,211,238,.18));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 30px 70px rgba(0,0,0,.35), 0 0 40px rgba(124,58,237,.22);
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:10px;
+    }
+    .sun .label{
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(255,255,255,.9);
+      letter-spacing:.5px;
+    }
+    .sun .tiny{
+      font-size:11px;
+      color:rgba(255,255,255,.65);
+      margin-top:4px;
+      font-family:var(--mono);
+    }
+
+    .planet{
+      position:absolute;
+      width: 16px;
+      height: 16px;
+      border-radius:999px;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 10px 25px rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .planet.sec{
+      width: 14px; height:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.5), rgba(34,211,238,.55));
+      box-shadow: 0 0 18px rgba(34,211,238,.35), 0 10px 25px rgba(0,0,0,.35);
+    }
+    .planet.min{
+      width: 16px; height:16px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.45), rgba(99,102,241,.55));
+      box-shadow: 0 0 18px rgba(99,102,241,.30), 0 10px 25px rgba(0,0,0,.35);
+    }
+    .planet.hour{
+      width: 18px; height:18px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.45), rgba(124,58,237,.60));
+      box-shadow: 0 0 18px rgba(124,58,237,.30), 0 10px 25px rgba(0,0,0,.35);
+    }
+
+    .legend{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      margin-top:12px;
+      color:var(--muted);
+      font-size:12px;
+      font-family:var(--mono);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px; display:inline-block; margin-right:6px;
+      border:1px solid rgba(255,255,255,.25);
+    }
+    .dot.s{ background: rgba(34,211,238,.8) }
+    .dot.m{ background: rgba(99,102,241,.8) }
+    .dot.h{ background: rgba(124,58,237,.8) }
+
+    .side{
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+    }
+    .side h2{
+      margin:0 0 8px;
+      font-size:14px;
+      color:rgba(255,255,255,.88);
+      letter-spacing:.2px;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:8px 10px;
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(255,255,255,.78);
+      margin-top:10px;
+    }
+    .kv div{ padding:8px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); }
+    .kv .k{ color: rgba(255,255,255,.62); }
+    .footer{
+      margin-top:14px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      text-align:center;
+      font-family:var(--mono);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="title">
+          <h1>Space Orbit Clock</h1>
+          <span class="pill">live</span>
+          <span class="pill" id="modePill">24h</span>
+        </div>
+        <div class="sub">Seconds, minutes, hours orbiting like little satellites. Keep calm. Stay cosmic. 🪐</div>
+      </div>
+
+      <div class="right">
+        <div class="bigtime" id="timeText">00:00:00</div>
+        <div class="date" id="dateText">…</div>
+        <div class="controls">
+          <button class="btn primary" id="toggleMode">Toggle 12/24</button>
+          <button class="btn" id="freeze">Freeze</button>
+          <button class="btn" id="unfreeze">Unfreeze</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="orbitWrap">
+        <div class="system" id="system">
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="ring r3"></div>
+
+          <div class="sun">
+            <div>
+              <div class="label" id="sunLabel">NOW</div>
+              <div class="tiny" id="sunTiny">Orbiting…</div>
+            </div>
+          </div>
+
+          <div class="planet hour" id="pHour" title="Hour"></div>
+          <div class="planet min"  id="pMin"  title="Minute"></div>
+          <div class="planet sec"  id="pSec"  title="Second"></div>
+        </div>
+
+        <div class="legend">
+          <span><span class="dot h"></span>Hour</span>
+          <span><span class="dot m"></span>Minute</span>
+          <span><span class="dot s"></span>Second</span>
+        </div>
+      </div>
+
+      <div class="side">
+        <h2>Orbit telemetry</h2>
+        <div class="kv">
+          <div class="k">Hour angle</div><div id="hourAng">0°</div>
+          <div class="k">Minute angle</div><div id="minAng">0°</div>
+          <div class="k">Second angle</div><div id="secAng">0°</div>
+          <div class="k">Tick</div><div id="tick">…</div>
+        </div>
+        <div class="footer">Tip: if embedding somewhere, “Freeze” is your screenshot button 📸</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const timeText = document.getElementById("timeText");
+    const dateText = document.getElementById("dateText");
+    const modePill = document.getElementById("modePill");
+
+    const pHour = document.getElementById("pHour");
+    const pMin  = document.getElementById("pMin");
+    const pSec  = document.getElementById("pSec");
+
+    const hourAngEl = document.getElementById("hourAng");
+    const minAngEl  = document.getElementById("minAng");
+    const secAngEl  = document.getElementById("secAng");
+    const tickEl    = document.getElementById("tick");
+
+    const sunTiny = document.getElementById("sunTiny");
+
+    let is24h = true;
+    let frozen = false;
+    let frozenDate = null;
+
+    function pad(n){ return String(n).padStart(2,"0"); }
+
+    // Place planet at a given orbit radius with angle degrees (0 at top, clockwise)
+    function placePlanet(el, radiusPct, angleDeg){
+      const center = 50;
+      const rad = (angleDeg - 90) * Math.PI / 180; // rotate so 0deg = top
+      const x = center + radiusPct * Math.cos(rad);
+      const y = center + radiusPct * Math.sin(rad);
+      el.style.left = x + "%";
+      el.style.top  = y + "%";
+    }
+
+    function formatTime(d){
+      let h = d.getHours();
+      const m = d.getMinutes();
+      const s = d.getSeconds();
+
+      if(is24h){
+        return `${pad(h)}:${pad(m)}:${pad(s)}`;
+      } else {
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12; if(h === 0) h = 12;
+        return `${pad(h)}:${pad(m)}:${pad(s)} ${ampm}`;
+      }
+    }
+
+    function formatDate(d){
+      const opts = { weekday:"short", year:"numeric", month:"short", day:"numeric" };
+      return d.toLocaleDateString(undefined, opts);
+    }
+
+    function update(){
+      const d = frozen ? frozenDate : new Date();
+
+      timeText.textContent = formatTime(d);
+      dateText.textContent = formatDate(d);
+
+      const h = d.getHours();
+      const m = d.getMinutes();
+      const s = d.getSeconds();
+
+      // Smooth angles
+      const secAngle = (s / 60) * 360;
+      const minAngle = ((m + s/60) / 60) * 360;
+      const hourAngle = (((h % 12) + m/60) / 12) * 360;
+
+      // Orbit radii (percent of half-width)
+      placePlanet(pSec, 38, secAngle);
+      placePlanet(pMin,  29, minAngle);
+      placePlanet(pHour, 20, hourAngle);
+
+      hourAngEl.textContent = `${hourAngle.toFixed(1)}°`;
+      minAngEl.textContent  = `${minAngle.toFixed(1)}°`;
+      secAngEl.textContent  = `${secAngle.toFixed(1)}°`;
+
+      tickEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      sunTiny.textContent = frozen ? "FROZEN TIME 🧊" : "Orbiting…";
+    }
+
+    document.getElementById("toggleMode").addEventListener("click", () => {
+      is24h = !is24h;
+      modePill.textContent = is24h ? "24h" : "12h";
+      update();
+    });
+
+    document.getElementById("freeze").addEventListener("click", () => {
+      frozen = true;
+      frozenDate = new Date();
+      update();
+    });
+
+    document.getElementById("unfreeze").addEventListener("click", () => {
+      frozen = false;
+      frozenDate = null;
+      update();
+    });
+
+    // animate: 10fps is plenty smooth and light
+    update();
+    setInterval(update, 100);
+  </script>
+</body>
+</html>
