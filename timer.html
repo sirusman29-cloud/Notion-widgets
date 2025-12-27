@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Missile Timer (45:00 • 9×5)</title>
   <style>
     :root{
@@ -19,623 +19,706 @@
       --shadow:0 20px 60px rgba(0,0,0,.45);
       --radius:22px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
-    html,body{height:100%;}
+    *{box-sizing:border-box}
     body{
       margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background: radial-gradient(1200px 800px at 20% 30%, rgba(124,58,237,.55), transparent 60%),
-                  radial-gradient(1200px 800px at 80% 20%, rgba(34,211,238,.45), transparent 55%),
-                  linear-gradient(120deg, var(--bg1), var(--bg2));
+      min-height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:28px;
-      overflow:hidden;
+      padding:24px;
+      color:var(--text);
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 700px at 25% 30%, rgba(124,58,237,.55), transparent 55%),
+        radial-gradient(1100px 700px at 80% 45%, rgba(34,211,238,.35), transparent 55%),
+        linear-gradient(120deg, var(--bg1), var(--bg2));
     }
-    .card{
-      width:min(980px, 96vw);
+
+    .panel{
+      width:min(980px, 100%);
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-      border:1px solid rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.12);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
-      padding:26px 26px 22px;
+      padding:26px;
       position:relative;
-      backdrop-filter: blur(10px);
+      overflow:hidden;
     }
+
     .top{
       display:flex;
       justify-content:space-between;
-      gap:18px;
+      gap:20px;
       align-items:flex-start;
-      flex-wrap:wrap;
     }
+
     .title{
       display:flex;
-      gap:12px;
-      align-items:center;
+      flex-direction:column;
+      gap:6px;
     }
     .title h1{
-      font-size:24px;
       margin:0;
+      font-size:28px;
       letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
     .pill{
       font-family:var(--mono);
-      font-size:12px;
-      color:rgba(255,255,255,.85);
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.14);
+      font-size:13px;
       padding:6px 10px;
       border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--muted);
     }
     .subtitle{
-      margin-top:6px;
       color:var(--muted);
       font-size:14px;
       line-height:1.35;
     }
 
-    .clockBlock{
+    .bigtime{
       text-align:right;
-      min-width:280px;
+      min-width:240px;
     }
-    .time{
+    .bigtime .time{
       font-family:var(--mono);
-      font-size:72px;
+      font-size:68px;
+      line-height:1;
       letter-spacing:2px;
       margin:0;
-      line-height:1;
-      text-shadow:0 6px 24px rgba(0,0,0,.35);
+      user-select:none;
     }
-    .metaRow{
+    .bigtime .meta{
+      margin-top:10px;
       display:flex;
       justify-content:flex-end;
       gap:10px;
-      margin-top:12px;
       flex-wrap:wrap;
     }
     .chip{
-      font-family:var(--mono);
-      font-size:12px;
       padding:8px 12px;
       border-radius:999px;
+      background:rgba(0,0,0,.12);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--muted);
+      font-size:13px;
+      font-family:var(--mono);
+    }
+    .chip.good{color:var(--good); border-color:rgba(52,211,153,.35)}
+    .chip.bad{color:var(--bad); border-color:rgba(251,113,133,.35)}
+
+    .progress-wrap{
+      margin-top:22px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.12);
-      color:rgba(255,255,255,.82);
-    }
-    .chip.good{ color:var(--good); border-color:rgba(52,211,153,.35); background:rgba(52,211,153,.08); }
-    .chip.bad{ color:var(--bad); border-color:rgba(251,113,133,.35); background:rgba(251,113,133,.08); }
-
-    .barWrap{
-      margin:22px 0 16px;
-      height:14px;
       border-radius:999px;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
+      height:12px;
       overflow:hidden;
-      position:relative;
     }
-    .bar{
+    .progress{
       height:100%;
       width:0%;
-      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      background:linear-gradient(90deg, var(--accent2), var(--accent));
       border-radius:999px;
-      box-shadow:0 0 18px rgba(124,58,237,.40);
-      transition: width .18s linear;
+      transition:width .2s linear;
     }
 
-    .dots{
+    .row{
       display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:flex-end;
-      margin-top:10px;
-      opacity:.9;
-    }
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background:rgba(255,255,255,.18);
-      border:1px solid rgba(255,255,255,.16);
-    }
-    .dot.on{
-      background:rgba(34,211,238,.60);
-      box-shadow:0 0 18px rgba(34,211,238,.35);
-      border-color:rgba(34,211,238,.38);
-    }
-
-    .controls{
-      display:flex;
-      gap:12px;
+      gap:14px;
       flex-wrap:wrap;
+      margin-top:18px;
       align-items:center;
-      margin-top:8px;
     }
     button{
       appearance:none;
       border:none;
       cursor:pointer;
-      color:var(--text);
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-      padding:10px 14px;
+      padding:12px 16px;
       border-radius:14px;
+      color:var(--text);
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
       font-weight:600;
-      letter-spacing:.2px;
-      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+      transition:transform .06s ease, background .12s ease;
     }
-    button:hover{ background:rgba(255,255,255,.12); }
-    button:active{ transform:scale(.98); }
-    .primary{
-      background:linear-gradient(90deg, rgba(34,211,238,.25), rgba(124,58,237,.25));
-      border-color:rgba(124,58,237,.35);
+    button:active{ transform:translateY(1px) }
+    button.primary{
+      background:linear-gradient(90deg, rgba(34,211,238,.25), rgba(124,58,237,.28));
+      border-color:rgba(255,255,255,.18);
+    }
+    button.ghost{
+      background:rgba(255,255,255,.07);
+    }
+    button:disabled{
+      cursor:not-allowed;
+      opacity:.55;
     }
 
     .grid{
       display:grid;
-      grid-template-columns: repeat(3, minmax(170px, 1fr));
-      gap:12px;
+      grid-template-columns: 1.2fr 1fr 1.2fr;
+      gap:14px;
       margin-top:14px;
     }
-    .field{
-      background:rgba(255,255,255,.06);
+    .box{
+      background:rgba(0,0,0,.10);
       border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:10px 12px;
+      border-radius:18px;
+      padding:14px;
     }
     .label{
-      font-family:var(--mono);
+      color:var(--muted);
       font-size:12px;
-      color:rgba(255,255,255,.70);
-      margin-bottom:6px;
+      font-family:var(--mono);
+      margin-bottom:8px;
     }
-    .row{
+    input, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      font-family:var(--mono);
+      outline:none;
+    }
+    input[type="range"]{
+      padding:0;
+      height:30px;
+    }
+    .inline{
       display:flex;
       gap:10px;
       align-items:center;
-      justify-content:space-between;
     }
-    input[type="number"], input[type="range"], select{
-      width:100%;
-      font-family:var(--mono);
-      color:var(--text);
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:12px;
-      padding:10px 10px;
-      outline:none;
-    }
-    select{ cursor:pointer; }
-    .hint{
-      margin-top:14px;
-      color:rgba(255,255,255,.60);
-      font-size:13px;
-    }
-    .warn{
-      margin-top:10px;
-      color:rgba(255,255,255,.62);
+    .mini{
       font-size:12px;
+      color:var(--muted);
       line-height:1.35;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px dashed rgba(255,255,255,.18);
-      background:rgba(255,255,255,.05);
-    }
-    .kbd{
+      margin-top:10px;
       font-family:var(--mono);
-      padding:.1rem .35rem;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(255,255,255,.06);
     }
+    .dots{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:10px;
+    }
+    .dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+    }
+    .dot.on{ background:rgba(34,211,238,.55); border-color:rgba(34,211,238,.75) }
+
+    .warn{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--muted);
+      font-family:var(--mono);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .blink{
+      animation:blink .35s ease 0s 2;
+    }
+    @keyframes blink{
+      0%{ filter:brightness(1) }
+      50%{ filter:brightness(1.25) }
+      100%{ filter:brightness(1) }
+    }
+
     @media (max-width:820px){
-      .time{ font-size:56px; }
-      .grid{ grid-template-columns: 1fr; }
-      .clockBlock{ text-align:left; }
-      .metaRow, .dots{ justify-content:flex-start; }
+      .top{flex-direction:column}
+      .bigtime{ text-align:left; min-width:auto }
+      .bigtime .time{ font-size:56px }
+      .dots{justify-content:flex-start}
+      .grid{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="panel" id="panel">
     <div class="top">
-      <div>
-        <div class="title">
-          <h1>Missile Timer</h1>
-          <span class="pill" id="modePill">45:00 • 9×5</span>
-        </div>
+      <div class="title">
+        <h1>
+          Missile Timer
+          <span class="pill">45:00 • 9×5</span>
+        </h1>
         <div class="subtitle">
-          45 minutes from zero. Auto 5-minute chunks. Loud alarm at each chunk end. Then victory ✨
+          Exact chunk alarms (no drift). Each 5-minute boundary triggers an alarm. Then stop at chunk 9. ✨
         </div>
       </div>
 
-      <div class="clockBlock">
-        <p class="time" id="timeText">45:00</p>
-        <div class="metaRow">
-          <span class="chip" id="chunkChip">Chunk: 0 / 9</span>
-          <span class="chip bad" id="statusChip">Status: Idle</span>
+      <div class="bigtime">
+        <p class="time" id="time">45:00</p>
+        <div class="meta">
+          <span class="chip" id="chunkChip">Chunk: 1 / 9</span>
+          <span class="chip" id="statusChip">Status: Ready</span>
         </div>
         <div class="dots" id="dots"></div>
       </div>
     </div>
 
-    <div class="barWrap"><div class="bar" id="bar"></div></div>
+    <div class="progress-wrap">
+      <div class="progress" id="progress"></div>
+    </div>
 
-    <div class="controls">
+    <div class="row">
       <button class="primary" id="startBtn">Start</button>
-      <button id="pauseBtn">Pause</button>
-      <button id="resetBtn">Reset</button>
+      <button class="ghost" id="pauseBtn" disabled>Pause</button>
+      <button class="ghost" id="resetBtn">Reset</button>
+      <button class="ghost" id="testBtn">Test alarm</button>
     </div>
 
     <div class="grid">
-      <div class="field">
+      <div class="box">
         <div class="label">Chunk (minutes)</div>
-        <div class="row">
-          <input id="chunkMinutes" type="number" min="1" max="60" step="1" value="5"/>
-        </div>
+        <input id="chunkMin" type="number" min="1" max="60" value="5" />
+        <div class="mini">Default 5. Changes apply on <b>Reset</b>.</div>
       </div>
 
-      <div class="field">
+      <div class="box">
         <div class="label">Total chunks</div>
-        <div class="row">
-          <input id="totalChunks" type="number" min="1" max="99" step="1" value="9"/>
-        </div>
+        <input id="totalChunks" type="number" min="1" max="60" value="9" />
+        <div class="mini">Default 9. Total time = chunk × chunks.</div>
       </div>
 
-      <div class="field">
+      <div class="box">
         <div class="label">Alarm sound + volume</div>
-        <div class="row" style="gap:10px;">
-          <select id="soundMode">
-            <option value="triple">Prominent (triple alarm)</option>
-            <option value="siren">Space siren</option>
-            <option value="beep">Soft beep</option>
+        <div class="inline" style="margin-bottom:10px;">
+          <select id="soundType">
+            <option value="siren" selected>Space siren (loud)</option>
+            <option value="ping">Laser ping (sharp)</option>
+            <option value="gong">Deep gong (heavy)</option>
+            <option value="beep">Classic beep</option>
           </select>
-          <div style="min-width:120px;">
-            <input id="volume" type="range" min="5" max="100" value="55"/>
-          </div>
         </div>
+        <div class="inline">
+          <input id="volume" type="range" min="0" max="100" value="70" />
+          <span class="pill" id="volLabel">70%</span>
+        </div>
+        <div class="mini">Sound is WebAudio. You must click <b>Start</b> once to unlock audio (browser rule).</div>
       </div>
     </div>
 
     <div class="warn">
-      Notion/Browser rule: sound needs one user gesture. So click <span class="kbd">Start</span> once to “arm” audio.  
-      Background tabs/embeds can throttle visuals, but this version schedules alarms ahead in WebAudio to stay reliable.
-    </div>
-
-    <div class="hint">
-      Tip: You can embed this in Notion using the URL: <span class="kbd">.../missile45.html</span>
+      Note: Some browsers throttle visuals when minimized. This timer keeps alarms accurate by scheduling them on the audio clock.  
+      If your browser fully suspends background audio, no webpage can force sound. (But timing won’t drift.)
     </div>
   </div>
 
 <script>
 (() => {
-  // ---------- UI ----------
-  const timeText = document.getElementById('timeText');
-  const bar = document.getElementById('bar');
+  // ---------- DOM ----------
+  const panel = document.getElementById('panel');
+  const timeEl = document.getElementById('time');
+  const progressEl = document.getElementById('progress');
   const chunkChip = document.getElementById('chunkChip');
   const statusChip = document.getElementById('statusChip');
   const dotsEl = document.getElementById('dots');
-  const modePill = document.getElementById('modePill');
 
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   const resetBtn = document.getElementById('resetBtn');
+  const testBtn  = document.getElementById('testBtn');
 
-  const chunkMinutesInput = document.getElementById('chunkMinutes');
+  const chunkMinInput = document.getElementById('chunkMin');
   const totalChunksInput = document.getElementById('totalChunks');
-  const soundMode = document.getElementById('soundMode');
-  const volume = document.getElementById('volume');
+  const soundTypeSel = document.getElementById('soundType');
+  const volumeRange = document.getElementById('volume');
+  const volLabel = document.getElementById('volLabel');
 
-  // ---------- Timer state ----------
+  // ---------- State ----------
   let running = false;
-  let paused = false;
+  let done = false;
 
-  let chunkMinutes = 5;
+  let chunkMin = 5;
   let totalChunks = 9;
 
-  let totalMs = chunkMinutes * totalChunks * 60 * 1000;
-  let startPerf = 0;          // performance.now() at start
-  let pausePerf = 0;          // performance.now() at pause
-  let pausedAccumMs = 0;      // total paused duration
+  let totalMs = 45 * 60 * 1000;
+  let chunkMs = 5 * 60 * 1000;
+
+  // timer clock (UI)
+  let startPerf = 0;
+  let pausedTotal = 0;
+  let pausePerf = 0;
+
   let rafId = null;
-  let tickInterval = null;    // fallback tick (when rAF throttled)
 
-  // ---------- Audio scheduling ----------
+  // Audio clock
   let audioCtx = null;
-  let armed = false;
-  let schedule = [];          // list of { tMs, type }
-  let scheduledNodes = [];    // created nodes so we can stop/cleanup
+  let scheduled = []; // nodes to cancel on reset
+  let scheduleBaseTime = 0; // audioCtx.currentTime at start
 
-  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+  // ---------- Helpers ----------
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const fmt2 = n => String(n).padStart(2, '0');
 
-  function fmt(ms){
+  function fmtTime(ms){
     ms = Math.max(0, ms);
-    const totalSec = Math.ceil(ms / 1000);
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return String(m).padStart(2,'0') + ":" + String(s).padStart(2,'0');
+    const s = Math.floor(ms/1000);
+    const m = Math.floor(s/60);
+    const r = s % 60;
+    return `${fmt2(m)}:${fmt2(r)}`;
   }
 
-  function setStatus(text, good){
-    statusChip.textContent = "Status: " + text;
-    statusChip.classList.toggle('good', !!good);
-    statusChip.classList.toggle('bad', !good);
+  function setStatus(text, tone){
+    statusChip.textContent = `Status: ${text}`;
+    statusChip.classList.remove('good','bad');
+    if (tone === 'good') statusChip.classList.add('good');
+    if (tone === 'bad') statusChip.classList.add('bad');
   }
 
-  function rebuildDots(){
-    dotsEl.innerHTML = "";
+  function readSettings(){
+    const cm = clamp(parseInt(chunkMinInput.value || '5', 10), 1, 60);
+    const tc = clamp(parseInt(totalChunksInput.value || '9', 10), 1, 60);
+    chunkMin = cm;
+    totalChunks = tc;
+    chunkMs = chunkMin * 60 * 1000;
+    totalMs = chunkMs * totalChunks;
+    buildDots();
+    chunkChip.textContent = `Chunk: 1 / ${totalChunks}`;
+    timeEl.textContent = fmtTime(totalMs);
+    progressEl.style.width = `0%`;
+  }
+
+  function buildDots(){
+    dotsEl.innerHTML = '';
     for(let i=0;i<totalChunks;i++){
       const d = document.createElement('div');
-      d.className = 'dot';
+      d.className = 'dot' + (i===0 ? ' on' : '');
       dotsEl.appendChild(d);
     }
   }
 
-  function setDots(completedChunks){
-    const kids = [...dotsEl.children];
-    kids.forEach((k, i) => k.classList.toggle('on', i < completedChunks));
+  function setDots(activeChunkIndex){
+    const dots = dotsEl.querySelectorAll('.dot');
+    dots.forEach((d,i)=> d.classList.toggle('on', i === activeChunkIndex));
   }
 
-  function recomputeTotals(){
-    chunkMinutes = clamp(parseInt(chunkMinutesInput.value || "5", 10), 1, 60);
-    totalChunks = clamp(parseInt(totalChunksInput.value || "9", 10), 1, 99);
-    totalMs = chunkMinutes * totalChunks * 60 * 1000;
-    modePill.textContent = `${Math.round(totalMs/60000)}:00 • ${totalChunks}×${chunkMinutes}`;
-    rebuildDots();
-    setDots(0);
-    updateUI(totalMs, 0);
+  function elapsedMs(){
+    const t = running ? performance.now() : pausePerf;
+    return Math.max(0, t - startPerf - pausedTotal);
   }
 
-  function updateUI(remainingMs, elapsedMs){
-    timeText.textContent = fmt(remainingMs);
-    const p = elapsedMs / totalMs;
-    bar.style.width = (clamp(p, 0, 1) * 100).toFixed(2) + "%";
-
-    const completed = clamp(Math.floor(elapsedMs / (chunkMinutes*60*1000)), 0, totalChunks);
-    chunkChip.textContent = `Chunk: ${completed} / ${totalChunks}`;
-    setDots(completed);
-  }
-
-  // ---------- WebAudio alarm generator ----------
+  // ---------- WebAudio: sound design ----------
   function ensureAudio(){
-    if(!audioCtx){
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    if (audioCtx) return audioCtx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    return audioCtx;
   }
 
-  async function armAudio(){
-    ensureAudio();
-    if(audioCtx.state !== "running"){
-      try{ await audioCtx.resume(); } catch(e){}
-    }
-    armed = true;
+  function volGain(){
+    const v = clamp(parseInt(volumeRange.value || '70', 10), 0, 100);
+    return v / 100;
   }
 
-  function stopAllScheduledAudio(){
-    scheduledNodes.forEach(n => {
-      try{ n.stop && n.stop(); } catch(e){}
-      try{ n.disconnect && n.disconnect(); } catch(e){}
-    });
-    scheduledNodes = [];
-  }
+  function scheduleAlarmAt(type, whenSec, gain01){
+    // Create nodes now, start in the future at whenSec
+    const ctx = audioCtx;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, whenSec);
+    master.gain.linearRampToValueAtTime(gain01, whenSec + 0.01);
+    master.gain.exponentialRampToValueAtTime(0.0001, whenSec + 1.15);
+    master.connect(ctx.destination);
 
-  function playTone(atTime, pattern, gainValue){
-    // pattern = array of [freqHz, durationSec]
-    const g = audioCtx.createGain();
-    g.gain.value = 0.0001;
+    const stopAt = whenSec + 1.2;
 
-    const master = clamp(parseInt(volume.value || "55", 10) / 100, 0.05, 1.0);
-    const base = master * clamp(gainValue, 0.05, 1.0);
-
-    g.connect(audioCtx.destination);
-
-    let t = atTime;
-    // smooth ramp in
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(base, t + 0.02);
-
-    pattern.forEach(([freq, dur], idx) => {
-      const o = audioCtx.createOscillator();
-      o.type = "sine";
-      o.frequency.setValueAtTime(freq, t);
-      o.connect(g);
-      o.start(t);
-      o.stop(t + dur);
-      scheduledNodes.push(o);
-
-      // tiny gap between bursts
-      t += dur + 0.03;
-    });
-
-    // ramp out
-    g.gain.setTargetAtTime(0.0001, t, 0.02);
-    scheduledNodes.push(g);
-  }
-
-  function scheduleAlarmsFromNow(){
-    if(!armed) return; // user must click start once
-    ensureAudio();
-    stopAllScheduledAudio();
-
-    const nowAudio = audioCtx.currentTime;
-    const nowPerf = performance.now();
-
-    const elapsedMs = (nowPerf - startPerf - pausedAccumMs);
-    const remainingMs = Math.max(0, totalMs - elapsedMs);
-
-    // Build schedule of upcoming chunk ends (in ms from start)
-    schedule = [];
-    for(let i=1;i<=totalChunks;i++){
-      schedule.push({ tMs: i * chunkMinutes * 60 * 1000, type: (i === totalChunks ? "final" : "chunk") });
-    }
-
-    // Schedule future events relative to "startPerf"
-    const mode = soundMode.value;
-
-    schedule.forEach(evt => {
-      const evtMsFromNow = evt.tMs - elapsedMs;
-      if(evtMsFromNow <= 0) return; // already passed
-
-      const when = nowAudio + (evtMsFromNow / 1000);
-
-      if(mode === "beep"){
-        // simple beep
-        playTone(when, [[880, 0.14]], 0.35);
-      } else if(mode === "siren"){
-        // siren sweep (approximated by stepped tones)
-        const siren = [];
-        const freqs = [520, 660, 820, 980, 820, 660];
-        freqs.forEach(f => siren.push([f, 0.10]));
-        playTone(when, siren, 0.55);
-      } else {
-        // prominent triple alarm
-        const triple = [[880,0.12],[880,0.12],[1040,0.16]];
-        playTone(when, triple, 0.65);
-      }
-
-      // add a “victory” extra flourish at the very end
-      if(evt.type === "final"){
-        const victoryWhen = when + 0.35;
-        const victory = [[523.25,0.10],[659.25,0.10],[783.99,0.14],[1046.5,0.18]];
-        playTone(victoryWhen, victory, 0.55);
-      }
-    });
-  }
-
-  // ---------- Tick loop ----------
-  function getElapsedMs(){
-    const now = performance.now();
-    if(!running) return 0;
-    if(paused) return (pausePerf - startPerf - pausedAccumMs);
-    return (now - startPerf - pausedAccumMs);
-  }
-
-  function tick(){
-    if(!running) return;
-
-    const elapsedMs = getElapsedMs();
-    const remainingMs = totalMs - elapsedMs;
-
-    updateUI(remainingMs, elapsedMs);
-
-    if(remainingMs <= 0){
-      running = false;
-      paused = false;
-      setStatus("Done", true);
-      cancelAnimationFrame(rafId);
-      rafId = null;
-      clearInterval(tickInterval);
-      tickInterval = null;
-      // (audio already scheduled for final)
-    }
-  }
-
-  function startLoop(){
-    // Use rAF + interval fallback
-    const loop = () => {
-      tick();
-      rafId = requestAnimationFrame(loop);
-    };
-    if(!rafId) rafId = requestAnimationFrame(loop);
-
-    if(!tickInterval){
-      tickInterval = setInterval(() => {
-        // helps when rAF is throttled in background
-        tick();
-      }, 250);
-    }
-  }
-
-  // ---------- Actions ----------
-  async function onStart(){
-    // Always arm audio on Start (user gesture)
-    await armAudio();
-
-    if(!running){
-      recomputeTotals();
-      running = true;
-      paused = false;
-      pausedAccumMs = 0;
-      startPerf = performance.now();
-      setStatus("Running", true);
-      scheduleAlarmsFromNow();
-      startLoop();
+    if (type === 'beep'){
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(880, whenSec);
+      o.frequency.exponentialRampToValueAtTime(660, whenSec + 0.25);
+      o.connect(master);
+      o.start(whenSec);
+      o.stop(stopAt);
+      scheduled.push(o, master);
       return;
     }
 
-    if(paused){
-      // resume
-      paused = false;
-      pausedAccumMs += (performance.now() - pausePerf);
-      setStatus("Running", true);
-      scheduleAlarmsFromNow(); // re-schedule remaining alarms
+    if (type === 'ping'){
+      // 2 sharp pings
+      const mk = (t, f1, f2) => {
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(gain01, t + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+        g.connect(ctx.destination);
+
+        const o = ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f1, t);
+        o.frequency.exponentialRampToValueAtTime(f2, t + 0.12);
+        o.connect(g);
+        o.start(t);
+        o.stop(t + 0.20);
+        scheduled.push(o, g);
+      };
+      mk(whenSec, 1400, 900);
+      mk(whenSec + 0.22, 1200, 700);
+      scheduled.push(master); // not used, but keep symmetry
+      return;
+    }
+
+    if (type === 'gong'){
+      // layered low partials
+      const partials = [
+        {f: 220, type:'sine'},
+        {f: 330, type:'sine'},
+        {f: 110, type:'triangle'},
+      ];
+      partials.forEach((p, idx) => {
+        const o = ctx.createOscillator();
+        o.type = p.type;
+        o.frequency.setValueAtTime(p.f, whenSec);
+        // slight detune wobble
+        o.detune.setValueAtTime((idx-1)*6, whenSec);
+        o.connect(master);
+        o.start(whenSec);
+        o.stop(stopAt);
+        scheduled.push(o);
+      });
+      scheduled.push(master);
+      return;
+    }
+
+    // siren (default): sweeping tone with tremolo
+    {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(520, whenSec);
+      o.frequency.linearRampToValueAtTime(980, whenSec + 0.35);
+      o.frequency.linearRampToValueAtTime(620, whenSec + 0.70);
+      o.frequency.linearRampToValueAtTime(1100, whenSec + 1.05);
+
+      // tremolo
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.setValueAtTime(9, whenSec);
+      lfoGain.gain.setValueAtTime(0.35, whenSec);
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(master.gain);
+
+      o.connect(master);
+      o.start(whenSec);
+      o.stop(stopAt);
+      lfo.start(whenSec);
+      lfo.stop(stopAt);
+
+      scheduled.push(o, lfo, lfoGain, master);
     }
   }
 
-  function onPause(){
-    if(!running) return;
-    if(!paused){
-      paused = true;
-      pausePerf = performance.now();
-      setStatus("Paused", false);
-      // Stop any scheduled future audio while paused
-      stopAllScheduledAudio();
+  function clearScheduled(){
+    for (const n of scheduled){
+      try{
+        if (typeof n.stop === 'function') n.stop(0);
+      }catch(e){}
+      try{
+        if (typeof n.disconnect === 'function') n.disconnect();
+      }catch(e){}
+    }
+    scheduled = [];
+  }
+
+  function scheduleAllChunkAlarms(){
+    clearScheduled();
+    const ctx = audioCtx;
+    const type = soundTypeSel.value;
+    const g = volGain();
+
+    // Anchor alarms to audio clock start time (this is the key!)
+    scheduleBaseTime = ctx.currentTime;
+
+    // Beep at EACH chunk end: 1..totalChunks (includes final completion)
+    for (let i = 1; i <= totalChunks; i++){
+      const when = scheduleBaseTime + (i * (chunkMs / 1000));
+      scheduleAlarmAt(type, when, g);
     }
   }
 
-  function onReset(){
+  async function armAudioAndSchedule(){
+    const ctx = ensureAudio();
+    // Must resume on user gesture
+    if (ctx.state !== 'running'){
+      await ctx.resume();
+    }
+    scheduleAllChunkAlarms();
+  }
+
+  // ---------- UI update loop ----------
+  function update(){
+    const e = elapsedMs();
+    const remaining = totalMs - e;
+
+    // chunk math
+    const chunkIndex = clamp(Math.floor(e / chunkMs), 0, totalChunks - 1); // 0-based current chunk
+    const chunkElapsed = e - (chunkIndex * chunkMs);
+    const chunkRemaining = chunkMs - chunkElapsed;
+
+    // UI
+    timeEl.textContent = fmtTime(remaining);
+    chunkChip.textContent = `Chunk: ${chunkIndex + 1} / ${totalChunks}`;
+    setDots(chunkIndex);
+
+    const pct = clamp((e / totalMs) * 100, 0, 100);
+    progressEl.style.width = `${pct}%`;
+
+    // finish
+    if (!done && remaining <= 0){
+      done = true;
+      running = false;
+      pauseBtn.disabled = true;
+      startBtn.disabled = false;
+      setStatus('Completed', 'good');
+      panel.classList.add('blink');
+      setTimeout(()=>panel.classList.remove('blink'), 500);
+      cancelAnimationFrame(rafId);
+      rafId = null;
+      return;
+    }
+
+    if (running) rafId = requestAnimationFrame(update);
+  }
+
+  // ---------- Controls ----------
+  function lockInputs(lock){
+    chunkMinInput.disabled = lock;
+    totalChunksInput.disabled = lock;
+    soundTypeSel.disabled = lock;
+  }
+
+  async function start(){
+    if (done) reset();
+
+    // Read settings only if not running (so it doesn't change mid-flight)
+    readSettings();
+
+    // Arm audio + schedule alarms on audio clock
+    try{
+      await armAudioAndSchedule();
+    }catch(e){
+      // Audio blocked; still run timer visuals
+      console.warn('Audio could not start:', e);
+    }
+
+    // Start / resume timer clock
+    if (!running){
+      if (startPerf === 0){
+        startPerf = performance.now();
+        pausedTotal = 0;
+      } else {
+        // Resume
+        pausedTotal += performance.now() - pausePerf;
+      }
+      running = true;
+      setStatus('Running', 'good');
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      lockInputs(true);
+
+      // Keep audio paused/resumed in sync with timer
+      if (audioCtx && audioCtx.state !== 'running'){
+        try{ await audioCtx.resume(); }catch(e){}
+      }
+
+      if (!rafId) rafId = requestAnimationFrame(update);
+    }
+  }
+
+  async function pause(){
+    if (!running) return;
     running = false;
-    paused = false;
-    pausedAccumMs = 0;
+    pausePerf = performance.now();
+    setStatus('Paused', 'bad');
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+
+    // Suspend audio clock so scheduled alarms also pause (no drift!)
+    if (audioCtx && audioCtx.state === 'running'){
+      try{ await audioCtx.suspend(); }catch(e){}
+    }
+  }
+
+  async function reset(){
+    running = false;
+    done = false;
+
+    // Stop UI loop
+    if (rafId){
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    // Stop scheduled alarms
+    if (audioCtx){
+      try{ await audioCtx.suspend(); }catch(e){}
+    }
+    clearScheduled();
+
+    // Reset timer clock
     startPerf = 0;
+    pausedTotal = 0;
     pausePerf = 0;
 
-    stopAllScheduledAudio();
-
-    cancelAnimationFrame(rafId);
-    rafId = null;
-    clearInterval(tickInterval);
-    tickInterval = null;
-
-    recomputeTotals();
-    updateUI(totalMs, 0);
-    chunkChip.textContent = `Chunk: 0 / ${totalChunks}`;
-    setStatus("Idle", false);
+    // Rebuild defaults/UI
+    readSettings();
+    setStatus('Ready');
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    lockInputs(false);
   }
 
-  // When tab becomes visible again, refresh UI and (re)arm schedule if running
-  document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible'){
-      if(running && !paused){
-        // Update UI immediately and re-schedule remaining alarms
-        tick();
-        scheduleAlarmsFromNow();
-      }
+  async function testAlarm(){
+    try{
+      const ctx = ensureAudio();
+      if (ctx.state !== 'running') await ctx.resume();
+
+      const type = soundTypeSel.value;
+      const g = volGain();
+      const t = ctx.currentTime + 0.02;
+      // play a single alarm immediately (not scheduled list)
+      scheduleAlarmAt(type, t, g);
+      panel.classList.add('blink');
+      setTimeout(()=>panel.classList.remove('blink'), 450);
+    }catch(e){
+      console.warn(e);
     }
+  }
+
+  // ---------- Events ----------
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', pause);
+  resetBtn.addEventListener('click', reset);
+  testBtn.addEventListener('click', testAlarm);
+
+  volumeRange.addEventListener('input', () => {
+    volLabel.textContent = `${clamp(parseInt(volumeRange.value || '0',10),0,100)}%`;
   });
 
-  // Changing sound mode/volume while running should re-schedule remaining alarms
-  function rescheduleIfRunning(){
-    if(running && !paused && armed){
-      scheduleAlarmsFromNow();
-    }
-  }
-
-  // ---------- Wire up ----------
-  startBtn.addEventListener('click', onStart);
-  pauseBtn.addEventListener('click', onPause);
-  resetBtn.addEventListener('click', onReset);
-
-  chunkMinutesInput.addEventListener('change', () => { onReset(); });
-  totalChunksInput.addEventListener('change', () => { onReset(); });
-  soundMode.addEventListener('change', rescheduleIfRunning);
-  volume.addEventListener('input', rescheduleIfRunning);
+  // settings changed
+  chunkMinInput.addEventListener('change', () => { if (!running) readSettings(); });
+  totalChunksInput.addEventListener('change', () => { if (!running) readSettings(); });
 
   // Init
-  recomputeTotals();
-  onReset();
+  volLabel.textContent = `${volumeRange.value}%`;
+  readSettings();
 })();
 </script>
 </body>
